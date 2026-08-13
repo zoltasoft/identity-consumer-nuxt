@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.0-beta.3 - 2026-08-13
+
+- Remove the application-specific environment template; configuration guidance remains in the README.
+- Fix CI pnpm setup and preserve the live contract job as an opt-in environment-backed check.
+- Use a trusted-publishing-compatible Node release in the npm publish workflow.
+
 ## 0.1.0-beta.2 - 2026-08-13
 
 - Add sandbox BFF-client support for hosted instant-demo-account handoffs.
