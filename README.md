@@ -38,6 +38,15 @@ export default defineNuxtConfig({
           callbackUrl: 'https://studio.example.com/api/identity/document-studio/auth/callback',
           sessionCookie: 'zolta-document-studio-session',
           defaultRedirect: '/document-studio',
+          sandboxApplication: 'documentStudioSandbox',
+        },
+        documentStudioSandbox: {
+          identityApiUrl: '',
+          hostedAuthUrl: '',
+          clientId: '',
+          clientSecret: '',
+          hostedApplication: 'document-studio',
+          callbackUrl: 'https://studio.example.com/api/identity/document-studio/auth/callback',
         },
       },
     },
@@ -57,11 +66,29 @@ NUXT_ZOLTA_IDENTITY_APPLICATIONS_DOCUMENT_STUDIO_HOSTED_APPLICATION=document-stu
 NUXT_ZOLTA_IDENTITY_APPLICATIONS_DOCUMENT_STUDIO_CALLBACK_URL=https://studio.example.com/api/identity/document-studio/auth/callback
 NUXT_ZOLTA_IDENTITY_APPLICATIONS_DOCUMENT_STUDIO_SESSION_COOKIE=zolta-document-studio-session
 NUXT_ZOLTA_IDENTITY_APPLICATIONS_DOCUMENT_STUDIO_DEFAULT_REDIRECT=/document-studio
+NUXT_ZOLTA_IDENTITY_APPLICATIONS_DOCUMENT_STUDIO_SANDBOX_APPLICATION=documentStudioSandbox
+NUXT_ZOLTA_IDENTITY_APPLICATIONS_DOCUMENT_STUDIO_SANDBOX_IDENTITY_API_URL=https://identity-api.example.com
+NUXT_ZOLTA_IDENTITY_APPLICATIONS_DOCUMENT_STUDIO_SANDBOX_HOSTED_AUTH_URL=https://identity.example.com
+NUXT_ZOLTA_IDENTITY_APPLICATIONS_DOCUMENT_STUDIO_SANDBOX_CLIENT_ID=<sandbox-confidential-client-id>
+NUXT_ZOLTA_IDENTITY_APPLICATIONS_DOCUMENT_STUDIO_SANDBOX_CLIENT_SECRET=<sandbox-confidential-client-secret>
+NUXT_ZOLTA_IDENTITY_APPLICATIONS_DOCUMENT_STUDIO_SANDBOX_HOSTED_APPLICATION=document-studio
+NUXT_ZOLTA_IDENTITY_APPLICATIONS_DOCUMENT_STUDIO_SANDBOX_CALLBACK_URL=https://studio.example.com/api/identity/document-studio/auth/callback
 ```
 
 `runtimeConfig.zoltaIdentity` is private by default. Do **not** place it under `runtimeConfig.public`, expose it through `app.config`, or prefix secrets with `NUXT_PUBLIC_`.
 
 Use one confidential client and one consumer session secret per deployed application/environment. For example, production and staging should have separate client secrets. The hosted application record is public presentation/routing metadata; the confidential client is the credential held by the app's server. `IDENTITY_HOSTED_APPLICATIONS_TOKEN` belongs only to the Zolta Identity host and API deployments—consumer Nuxt apps do not need it.
+
+## Optional sandbox demos
+
+To offer the hosted **Create instant demo account** action, create a separate
+sandbox project and a dedicated sandbox BFF client in the Identity Console.
+Link that client in the hosted application's **Sandbox client ID** field. Add a
+second application configuration and set the live configuration's
+`sandboxApplication` to its key, as shown above. Both BFF configurations must
+use the exact callback URL registered on the hosted application. The module
+uses the callback's connection binding to exchange and refresh sandbox tokens
+with the sandbox client while preserving one normal consumer session.
 
 ## Routes
 
