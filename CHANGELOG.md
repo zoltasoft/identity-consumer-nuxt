@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.0-beta.2 - 2026-08-13
+
+- Add sandbox BFF-client support for hosted instant-demo-account handoffs.
+- Preserve the selected token connection for token exchange, refresh, and logout.
+- Document sandbox configuration and provide environment-variable examples.
+
 ## 0.1.0-beta.1 - 2026-08-11
 
 - First npm beta release.
