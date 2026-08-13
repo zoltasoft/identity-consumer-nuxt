@@ -19,6 +19,8 @@ export type ZoltaIdentityApplication = {
   clientSecret: string
   /** Hosted application key configured in the Identity console. */
   hostedApplication: string
+  /** Configuration key for the sandbox BFF client used by temporary demo accounts. */
+  sandboxApplication?: string
   /** Exact callback URL registered for the confidential client. */
   callbackUrl: string
   /** Cookie name for the app's encrypted server session. */

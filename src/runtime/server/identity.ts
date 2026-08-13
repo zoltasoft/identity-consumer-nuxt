@@ -28,6 +28,7 @@ type ConsumerSession = {
     accessTokenExpiresAt: string
     refreshToken: string
     refreshTokenExpiresAt: string
+    connection: 'primary' | 'sandbox'
   }
 }
 
@@ -95,7 +96,14 @@ export function identityApplication(event: H3Event, name: string): Required<Zolt
     callbackUrl,
     sessionCookie: cookieName(name, application.sessionCookie),
     defaultRedirect: safeLocalPath(application.defaultRedirect, '/'),
+    sandboxApplication: application.sandboxApplication ? String(application.sandboxApplication) : '',
   }
+}
+
+function tokenApplication(event: H3Event, application: Required<ZoltaIdentityApplication>, connection: 'primary' | 'sandbox'): Required<ZoltaIdentityApplication> {
+  if (connection === 'primary') return application
+  if (!application.sandboxApplication) failConfiguration(application.hostedApplication, 'sandboxApplication is required for a sandbox handoff')
+  return identityApplication(event, application.sandboxApplication)
 }
 
 function sessionPassword(event: H3Event, name: string): string {
@@ -134,7 +142,7 @@ function user(data: IdentityLoginData): ZoltaIdentityUser {
   }
 }
 
-async function storeLogin(event: H3Event, name: string, application: Required<ZoltaIdentityApplication>, data: IdentityLoginData): Promise<void> {
+async function storeLogin(event: H3Event, name: string, application: Required<ZoltaIdentityApplication>, data: IdentityLoginData, connection: 'primary' | 'sandbox'): Promise<void> {
   await (await applicationSession(event, name, application)).update({
     user: user(data),
     secure: {
@@ -142,6 +150,7 @@ async function storeLogin(event: H3Event, name: string, application: Required<Zo
       accessTokenExpiresAt: data.access_token_expires_at,
       refreshToken: data.refresh_token,
       refreshTokenExpiresAt: data.refresh_token_expires_at,
+      connection,
     },
   })
 }
@@ -166,7 +175,7 @@ export async function beginIdentityAuthorization(
   return destination.toString()
 }
 
-export async function completeIdentityAuthorization(event: H3Event, name: string, code: string, state: string): Promise<string> {
+export async function completeIdentityAuthorization(event: H3Event, name: string, code: string, state: string, connection: 'primary' | 'sandbox' = 'primary'): Promise<string> {
   const application = identityApplication(event, name)
   const transaction = await transactionSession(event, name, application)
   const data = transaction.data
@@ -180,12 +189,13 @@ export async function completeIdentityAuthorization(event: H3Event, name: string
   }
 
   try {
+    const client = tokenApplication(event, application, connection)
     const response = await $fetch<{ data: IdentityLoginData }>('/api/v1/identity/auth/handoff/exchange', {
-      baseURL: application.identityApiUrl,
+      baseURL: client.identityApiUrl,
       method: 'POST',
-      body: { client_id: application.clientId, client_secret: application.clientSecret, code, redirect_uri: application.callbackUrl },
+      body: { client_id: client.clientId, client_secret: client.clientSecret, code, redirect_uri: client.callbackUrl },
     })
-    await storeLogin(event, name, application, response.data)
+    await storeLogin(event, name, application, response.data, connection)
     return safeLocalPath(data.returnTo, application.defaultRedirect)
   } finally {
     await transaction.clear()
@@ -199,15 +209,16 @@ export async function identityAccessToken(event: H3Event, name: string): Promise
   if (!secure?.accessToken || !secure.refreshToken) {
     throw createError({ statusCode: 401, statusMessage: 'An Identity session is required.' })
   }
+  const client = tokenApplication(event, application, secure.connection ?? 'primary')
   const expiresAt = Date.parse(secure.accessTokenExpiresAt)
   if (Number.isFinite(expiresAt) && expiresAt > Date.now() + 30_000) return secure.accessToken
 
   const response = await $fetch<{ data: IdentityLoginData }>('/api/v1/identity/auth/refresh', {
-    baseURL: application.identityApiUrl,
+    baseURL: client.identityApiUrl,
     method: 'POST',
-    body: { client_id: application.clientId, client_secret: application.clientSecret, refresh_token: secure.refreshToken },
+    body: { client_id: client.clientId, client_secret: client.clientSecret, refresh_token: secure.refreshToken },
   })
-  await storeLogin(event, name, application, response.data)
+  await storeLogin(event, name, application, response.data, secure.connection ?? 'primary')
   return response.data.access_token
 }
 
@@ -227,8 +238,9 @@ export async function logoutIdentityApplication(event: H3Event, name: string): P
   const current = await applicationSession(event, name, application)
   const accessToken = current.data.secure?.accessToken
   if (accessToken) {
+    const client = tokenApplication(event, application, current.data.secure?.connection ?? 'primary')
     await $fetch('/api/v1/identity/auth/logout', {
-      baseURL: application.identityApiUrl,
+      baseURL: client.identityApiUrl,
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}` },
     }).catch(() => undefined)

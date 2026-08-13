@@ -60,7 +60,16 @@ function configure(overrides: Record<string, unknown> = {}) {
           hostedApplication: 'document-studio',
           callbackUrl: 'https://studio.example.test/api/identity/document-studio/auth/callback',
           defaultRedirect: '/documents',
+          sandboxApplication: 'documentStudioSandbox',
           ...overrides,
+        },
+        documentStudioSandbox: {
+          identityApiUrl: 'https://identity-api.example.test',
+          hostedAuthUrl: 'https://identity.example.test',
+          clientId: 'sandbox-client-id',
+          clientSecret: 'sandbox-client-secret',
+          hostedApplication: 'document-studio',
+          callbackUrl: 'https://studio.example.test/api/identity/document-studio/auth/callback',
         },
         jobTracker: {
           identityApiUrl: 'https://identity-api.example.test',
@@ -125,6 +134,26 @@ describe('Zolta Identity consumer security boundary', () => {
     }))
     expect(mocks.records.get('zolta-identity-document-studio-session-transaction')?.clear).toHaveBeenCalledOnce()
     await expect(completeIdentityAuthorization({} as never, 'document-studio', 'handoff-code-that-is-long-enough', state)).rejects.toMatchObject({ statusCode: 401 })
+  })
+
+  it('exchanges and refreshes a sandbox handoff with the sandbox BFF client in the primary session', async () => {
+    const destination = await beginIdentityAuthorization({} as never, 'document-studio')
+    const state = new URL(destination).searchParams.get('state')!
+    mocks.fetch.mockResolvedValueOnce(response)
+
+    await completeIdentityAuthorization({} as never, 'document-studio', 'sandbox-handoff-code-that-is-long-enough', state, 'sandbox')
+    expect(mocks.fetch).toHaveBeenCalledWith('/api/v1/identity/auth/handoff/exchange', expect.objectContaining({
+      body: expect.objectContaining({ client_id: 'sandbox-client-id', client_secret: 'sandbox-client-secret' }),
+    }))
+    const app = mocks.records.get('zolta-identity-document-studio-session')!
+    expect(app.data.secure).toMatchObject({ connection: 'sandbox' })
+    ;(app.data.secure as { accessTokenExpiresAt: string }).accessTokenExpiresAt = '2000-01-01T00:00:00Z'
+    mocks.fetch.mockResolvedValueOnce(response)
+
+    await identityAccessToken({} as never, 'document-studio')
+    expect(mocks.fetch).toHaveBeenLastCalledWith('/api/v1/identity/auth/refresh', expect.objectContaining({
+      body: expect.objectContaining({ client_id: 'sandbox-client-id', client_secret: 'sandbox-client-secret' }),
+    }))
   })
 
   it('rejects an expired callback transaction', async () => {
