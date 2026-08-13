@@ -14,8 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -24,21 +22,24 @@ jobs:
       - run: pnpm check
 
   real-contract:
-    if: ${{ secrets.ZOLTA_IDENTITY_CONTRACT_HOSTED_AUTH_URL != '' }}
     needs: verify
     runs-on: ubuntu-latest
     environment: contract
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test:contract
+      - name: Run optional live contract test
         env:
           ZOLTA_IDENTITY_CONTRACT_HOSTED_AUTH_URL: ${{ secrets.ZOLTA_IDENTITY_CONTRACT_HOSTED_AUTH_URL }}
           ZOLTA_IDENTITY_CONTRACT_HOSTED_APPLICATION: ${{ secrets.ZOLTA_IDENTITY_CONTRACT_HOSTED_APPLICATION }}
+        run: |
+          if [ -z "$ZOLTA_IDENTITY_CONTRACT_HOSTED_AUTH_URL" ]; then
+            echo 'Live contract test skipped: configure the contract environment secrets to enable it.'
+            exit 0
+          fi
+          pnpm test:contract
