@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.0-beta.7 - 2026-08-14
+
+- Add the hosted-account logout handoff, which clears the consumer's encrypted session before beginning a new hosted sign-in flow.
+
 ## 0.1.0-beta.6 - 2026-08-14
 
 - Add the authenticated hosted-account authorization route backed by Identity-issued one-time portal intents.

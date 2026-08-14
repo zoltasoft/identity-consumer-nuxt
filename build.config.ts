@@ -11,6 +11,7 @@ export default defineBuildConfig({
     'src/runtime/server/api/session.get',
     'src/runtime/server/api/logout.post',
     'src/runtime/server/api/account-authorize.get',
+    'src/runtime/server/api/account-logout.get',
     'src/runtime/client/routes',
     'src/runtime/client/session',
     'src/runtime/client/middleware',

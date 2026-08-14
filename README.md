@@ -101,6 +101,7 @@ For an application named `document-studio`, the module registers these no-store 
 | `GET /api/identity/document-studio/auth/session` | Returns only the public user profile or `null`. |
 | `POST /api/identity/document-studio/auth/logout` | Revokes remote access when possible and clears the local session. |
 | `GET /api/identity/document-studio/account/authorize` | Requires an existing Identity session, creates a short-lived one-time account-portal intent, then redirects to hosted account settings. |
+| `GET /api/identity/document-studio/account/logout` | Clears the consumer session and begins a new hosted sign-in flow after account-portal logout. |
 
 Use the account route only for an authenticated user's **Manage identity** action. The opaque intent is issued and consumed by Identity; consumers never sign or validate it, and no access or refresh token is placed in the browser URL.
 
