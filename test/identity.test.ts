@@ -29,6 +29,7 @@ vi.mock('ofetch', () => ({ $fetch: mocks.fetch }))
 
 import {
   beginIdentityAuthorization,
+  beginIdentityAccountPortal,
   completeIdentityAuthorization,
   identityApplication,
   identityAccessToken,
@@ -134,6 +135,23 @@ describe('Zolta Identity consumer security boundary', () => {
     }))
     expect(mocks.records.get('zolta-identity-document-studio-session-transaction')?.clear).toHaveBeenCalledOnce()
     await expect(completeIdentityAuthorization({} as never, 'document-studio', 'handoff-code-that-is-long-enough', state)).rejects.toMatchObject({ statusCode: 401 })
+  })
+
+  it('creates an Identity-issued account portal intent and redirects without exposing tokens', async () => {
+    const app = identityApplication({} as never, 'document-studio')
+    mocks.records.set(app.sessionCookie, {
+      data: { secure: { accessToken: 'access-token', accessTokenExpiresAt: '2030-01-01T00:00:00Z', refreshToken: 'refresh-token', refreshTokenExpiresAt: '2030-01-02T00:00:00Z', connection: 'primary' } },
+      update: vi.fn(), clear: vi.fn(),
+    })
+    mocks.fetch.mockResolvedValueOnce({ data: { intent: 'opaque-identity-issued-intent' } })
+
+    const destination = await beginIdentityAccountPortal({} as never, 'document-studio', 'security')
+    expect(destination).toBe('https://identity.example.test/account?application=document-studio&intent=opaque-identity-issued-intent&tab=security')
+    expect(mocks.fetch).toHaveBeenCalledWith('/api/v1/identity/auth/account/intent', expect.objectContaining({
+      method: 'POST',
+      headers: expect.objectContaining({ Authorization: 'Bearer access-token' }),
+      body: expect.objectContaining({ client_id: 'client-id', hosted_application: 'document-studio' }),
+    }))
   })
 
   it('exchanges and refreshes a sandbox handoff with the sandbox BFF client in the primary session', async () => {

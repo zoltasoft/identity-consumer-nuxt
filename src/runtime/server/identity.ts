@@ -175,6 +175,27 @@ export async function beginIdentityAuthorization(
   return destination.toString()
 }
 
+/** Starts a short-lived, host-authorized entry to the hosted account portal. */
+export async function beginIdentityAccountPortal(
+  event: H3Event,
+  name: string,
+  tab: 'profile' | 'security' = 'profile',
+): Promise<string> {
+  const application = identityApplication(event, name)
+  const accessToken = await identityAccessToken(event, name)
+  const response = await $fetch<{ data: { intent: string } }>('/api/v1/identity/auth/account/intent', {
+    baseURL: application.identityApiUrl,
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
+    body: { client_id: application.clientId, client_secret: application.clientSecret, hosted_application: application.hostedApplication },
+  })
+  const destination = new URL('/account', `${application.hostedAuthUrl}/`)
+  destination.searchParams.set('application', application.hostedApplication)
+  destination.searchParams.set('intent', response.data.intent)
+  destination.searchParams.set('tab', tab)
+  return destination.toString()
+}
+
 export async function completeIdentityAuthorization(event: H3Event, name: string, code: string, state: string, connection: 'primary' | 'sandbox' = 'primary'): Promise<string> {
   const application = identityApplication(event, name)
   const transaction = await transactionSession(event, name, application)

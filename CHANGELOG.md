@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.0-beta.6 - 2026-08-14
+
+- Add the authenticated hosted-account authorization route backed by Identity-issued one-time portal intents.
+- Keep portal intent creation server-side and document its security boundary.
+
 ## 0.1.0-beta.5 - 2026-08-13
 
 - Publish prereleases under npm's `beta` dist-tag.

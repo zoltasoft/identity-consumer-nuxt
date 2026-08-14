@@ -100,6 +100,9 @@ For an application named `document-studio`, the module registers these no-store 
 | `GET /api/identity/document-studio/auth/callback` | Validates state, exchanges the handoff code, and redirects locally. |
 | `GET /api/identity/document-studio/auth/session` | Returns only the public user profile or `null`. |
 | `POST /api/identity/document-studio/auth/logout` | Revokes remote access when possible and clears the local session. |
+| `GET /api/identity/document-studio/account/authorize` | Requires an existing Identity session, creates a short-lived one-time account-portal intent, then redirects to hosted account settings. |
+
+Use the account route only for an authenticated user's **Manage identity** action. The opaque intent is issued and consumed by Identity; consumers never sign or validate it, and no access or refresh token is placed in the browser URL.
 
 Start login from a page, component, or server route:
 
@@ -146,6 +149,7 @@ If your host app protects POST requests with CSRF middleware, pass that header i
 - Sessions are encrypted with `zoltaIdentity.sessionSecret`, use `HttpOnly`, `SameSite=Lax`, and `Secure` in production.
 - Redirect targets are restricted to local paths. Protocol-relative and backslash-based values are rejected.
 - Production rejects non-local HTTP identity and callback URLs.
+- Account-management redirects use an Identity-issued, short-lived, single-use portal intent. A direct account URL is rejected by the hosted portal when its entry authorization is absent.
 
 The module supports the Zolta Identity API v1 handoff, refresh, and logout contract. Treat that API version as the compatibility boundary; a breaking protocol change will be released as a new major module version.
 

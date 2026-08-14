@@ -37,6 +37,7 @@ const zoltaIdentityConsumerModule: NuxtModule<ZoltaIdentityConsumerModuleOptions
     addServerHandler({ route: route('/:application/auth/callback'), handler: resolver.resolve('./runtime/server/api/callback.get') })
     addServerHandler({ route: route('/:application/auth/session'), handler: resolver.resolve('./runtime/server/api/session.get') })
     addServerHandler({ route: route('/:application/auth/logout'), handler: resolver.resolve('./runtime/server/api/logout.post') })
+    addServerHandler({ route: route('/:application/account/authorize'), handler: resolver.resolve('./runtime/server/api/account-authorize.get') })
 
     addImports([
       { name: 'useZoltaIdentitySession', from: resolver.resolve('./runtime/client/session') },
