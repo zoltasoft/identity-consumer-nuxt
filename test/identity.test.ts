@@ -146,7 +146,7 @@ describe('Zolta Identity consumer security boundary', () => {
     mocks.fetch.mockResolvedValueOnce({ data: { intent: 'opaque-identity-issued-intent' } })
 
     const destination = await beginIdentityAccountPortal({} as never, 'document-studio', 'security')
-    expect(destination).toBe('https://identity.example.test/account?application=document-studio&intent=opaque-identity-issued-intent&tab=security')
+    expect(destination).toBe('https://identity.example.test/account/authenticate?application=document-studio&intent=opaque-identity-issued-intent&tab=security')
     expect(mocks.fetch).toHaveBeenCalledWith('/api/v1/identity/auth/account/intent', expect.objectContaining({
       method: 'POST',
       headers: expect.objectContaining({ Authorization: 'Bearer access-token' }),

@@ -189,7 +189,7 @@ export async function beginIdentityAccountPortal(
     headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
     body: { client_id: application.clientId, client_secret: application.clientSecret, hosted_application: application.hostedApplication },
   })
-  const destination = new URL('/account', `${application.hostedAuthUrl}/`)
+  const destination = new URL('/account/authenticate', `${application.hostedAuthUrl}/`)
   destination.searchParams.set('application', application.hostedApplication)
   destination.searchParams.set('intent', response.data.intent)
   destination.searchParams.set('tab', tab)

@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.0-beta.8 - 2026-08-14
+
+- Route hosted account authorization to the dedicated `/account/authenticate` entry page, keeping account settings independent from credential collection.
+
 ## 0.1.0-beta.7 - 2026-08-14
 
 - Add the hosted-account logout handoff, which clears the consumer's encrypted session before beginning a new hosted sign-in flow.
